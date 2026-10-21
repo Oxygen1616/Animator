@@ -18,6 +18,13 @@ from pydantic import BaseModel, Field
 from google import genai
 
 from ...gemini.pipeline import StoryboardOptions, render_storyboard
+from ...gemini.settings import (
+    DEFAULT_TEXT_MODEL,
+    DEFAULT_REGION_MODEL,
+    DEFAULT_IMAGE_MODEL,
+    DEFAULT_TTS_MODEL,
+    DEFAULT_VOICE,
+)
 from ...render import Scene, render_video
 from ..settings import get_settings
 
@@ -87,15 +94,20 @@ async def generate_video(
     async def _run_pipeline():
         try:
             google_client = genai.Client(api_key=api_key)
+            text_model = os.environ.get("GEMINI_MODEL") or DEFAULT_TEXT_MODEL
+            region_model = os.environ.get("GEMINI_REGION_MODEL") or DEFAULT_REGION_MODEL
+            image_model = os.environ.get("GEMINI_IMAGE_MODEL") or DEFAULT_IMAGE_MODEL
+            tts_model = os.environ.get("GEMINI_TTS_MODEL") or DEFAULT_TTS_MODEL
+
             options = StoryboardOptions(
                 idea=request.prompt,
                 output=output_path,
                 quality=request.quality or "medium",
-                text_model=os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
-                region_model="gemini-2.5-flash",
-                image_model="imagen-3.0-generate-002",
-                tts_model="gemini-2.5-flash",
-                voice=request.voice or "Kore",
+                text_model=text_model,
+                region_model=region_model,
+                image_model=image_model,
+                tts_model=tts_model,
+                voice=request.voice or DEFAULT_VOICE,
                 num_scenes=request.scenes,
                 save_assets=False,
             )
