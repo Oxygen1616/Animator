@@ -95,7 +95,10 @@ INDEX_HTML = """<!DOCTYPE html>
       border-color: var(--primary);
       box-shadow: 0 0 0 1px var(--primary);
     }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    @media (max-width: 768px) {
+      .grid-3 { grid-template-columns: 1fr; }
+    }
     button {
       background: var(--primary);
       color: white;
@@ -162,7 +165,21 @@ INDEX_HTML = """<!DOCTYPE html>
           <label for="prompt">Topic or Explanation Prompt</label>
           <textarea id="prompt" rows="3" placeholder="e.g. How wings create lift when a plane flies..." required></textarea>
 
-          <div class="grid-2">
+          <div class="grid-3">
+            <div>
+              <label for="scenes">Target Scenes</label>
+              <select id="scenes">
+                <option value="" selected>Auto (Ideal 3–5 scenes)</option>
+                <option value="1">1 Scene (Quick tip)</option>
+                <option value="2">2 Scenes</option>
+                <option value="3">3 Scenes</option>
+                <option value="4">4 Scenes</option>
+                <option value="5">5 Scenes</option>
+                <option value="6">6 Scenes</option>
+                <option value="7">7 Scenes</option>
+                <option value="8">8 Scenes (Comprehensive)</option>
+              </select>
+            </div>
             <div>
               <label for="voice">Narration Voice</label>
               <select id="voice">
@@ -172,6 +189,8 @@ INDEX_HTML = """<!DOCTYPE html>
                 <option value="Aoede">Aoede (Warm Female)</option>
                 <option value="Zephyr">Zephyr (Smooth Male)</option>
                 <option value="Leda">Leda (Calm Female)</option>
+                <option value="Charon">Charon (Authoritative Male)</option>
+                <option value="Orus">Orus (Direct Male)</option>
               </select>
             </div>
             <div>
@@ -215,6 +234,7 @@ Internal (Docker network): http://oxygen-animator_server_1:8000/api/generate</pr
   -H "Content-Type: application/json" \\
   -d '{
     "prompt": "How photosynthesis works",
+    "scenes": 4,
     "voice": "Kore",
     "quality": "medium"
   }'</pre>
@@ -226,6 +246,7 @@ Internal (Docker network): http://oxygen-animator_server_1:8000/api/generate</pr
 # 1. Submit animation task
 res = requests.post("http://umbrel.local:8002/api/generate", json={
     "prompt": "How photosynthesis works",
+    "scenes": 4,
     "voice": "Kore"
 }).json()
 job_id = res["job_id"]
@@ -256,6 +277,8 @@ while True:
     async function handleGenerate(e) {
       e.preventDefault();
       const prompt = document.getElementById('prompt').value;
+      const scenesVal = document.getElementById('scenes').value;
+      const scenes = scenesVal ? parseInt(scenesVal, 10) : null;
       const voice = document.getElementById('voice').value;
       const quality = document.getElementById('quality').value;
       const key = document.getElementById('gemini_key').value;
@@ -271,6 +294,7 @@ while True:
 
       try {
         const payload = { prompt, voice, quality };
+        if (scenes) payload.scenes = scenes;
         if (key) payload.gemini_api_key = key;
 
         const res = await fetch('/api/generate', {
